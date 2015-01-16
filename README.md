@@ -9,9 +9,9 @@ All the tests and installation was realized in an OSX machine, but it should be 
 
 To start we need to install in a dev machine VirtualBox and Vagrant, those two will allow us to virtualize a machine in a repeteable and easy way.
 
-Installing VirtualBox it's easy, it can be downloaded from [here](https://www.virtualbox.org/wiki/Downloads)
+Installing VirtualBox it's easy, it can be downloaded from [here](https://www.virtualbox.org/wiki/Downloads).
 
-Vagrant can be found in this [url](https://www.vagrantup.com/downloads.html 
+Vagrant can be found in this [url](https://www.vagrantup.com/downloads.html). 
 
 In the root directory you can find the Vagrantfile which contains the information needed by Vagrant to startup the virtual machine with the desired configuration. Our example will pull an Ubuntu image, will install it, then it will install Docker in the newly created box to finally pull the Docker image to create our Spark environment.
 
