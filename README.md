@@ -1,6 +1,41 @@
+#Vagrant + Docker environment for Spark standalone testing
+
+This environment will allow us to run Spark on a standalone environment configurated using:
+ - Vagrant
+ - Docker
+ - prodriguezdefino/spark-1.2.0-standalone
+
+All the tests and installation was realized in an OSX machine, but it should be fairly easy to replicate for Windows or Linux boxes (using binaries or with a package manager). 
+
+To start we need to install in a dev machine VirtualBox and Vagrant, those two will allow us to virtualize a machine in a repeteable and easy way.
+
+Installing VirtualBox it's easy, it can be downloaded from [here](https://www.virtualbox.org/wiki/Downloads)
+
+Vagrant can be found in this [url](https://www.vagrantup.com/downloads.html 
+
+In the root directory you can find the Vagrantfile which contains the information needed by Vagrant to startup the virtual machine with the desired configuration. Our example will pull an Ubuntu image, will install it, then it will install Docker in the newly created box to finally pull the Docker image to create our Spark environment.
+
+Running in the console ```vagrant up``` will do the trick. If it's the first time it will take a while since it needs to download everything from the remote repositories.
+
+After the machine completed the installation of the needed components we can log into the spark-host with ```vagrant ssh```. To access the Docker container you can use first ```docker ps``` to find out container's id (first 3 characters will be suficient and then ```docker exec -it <CONTAINER-ID> bash``` to get us a bash interface with the loaded Spark environment (all inside the container).
+
+Then, once in the container bash, we can load up the master's spark console with ```spark-shell --master yarn-client --driver-memory 1g --executor-memory 1g --executor-cores 1``` and start testing the environment with:
+```
+	val NUM_SAMPLES = 10000000
+	val count = sc.parallelize(1 to NUM_SAMPLES).map{i =>
+	  val x = Math.random()
+	  val y = Math.random()
+	  if (x*x + y*y < 1) 1 else 0
+	}.reduce(_ + _)
+	println("Pi is roughly " + 4.0 * count / NUM_SAMPLES)
+```
+this will calculate an approximation of Pi, to improve the result increase NUM_SAMPLES variable.
+
+If everything went smoot we can move to something more interesting.
+
 ## Testing Spark with a CSV dataset
 
-In the hadoop-2.6.0-base image we added to the docker filesystem a set of CSV files that contains the historical information of the MLB player's statistics from 1930's to 2013. It is not a big dataset (worth it to use this platform), but indeed it will help as an example for this tutorial.
+In the hadoop-2.6.0-base image we added to the docker filesystem a set of CSV files that contains the historical information of the MLB player's statistics from 1930's to 2013. It is not a big dataset (worth it to use this platform), but indeed it will help as an example for this tutorial. Since our Spark image is built based on the Hadoop image the files are available in the filesystem too.
 
 Okay, lets copy the information of Pitcher's statistics to the hdfs local node.
 ```

@@ -9,7 +9,6 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.vm.box = "ubuntu/trusty64"
   config.vm.network "forwarded_port", guest: 4444, host: 4444
   config.vm.provision "docker" do |d|
-    d.run "prodriguezdefino/spark-1.2.0-standalone",
-      daemonize: true
+    d.run "prodriguezdefino/spark-1.2.0-standalone"
   end 
 end
