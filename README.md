@@ -15,7 +15,7 @@ Vagrant can be found in this [url](https://www.vagrantup.com/downloads.html).
 
 In the root directory you can find the Vagrantfile which contains the information needed by Vagrant to startup the virtual machine with the desired configuration. Our example will pull an Ubuntu image, will install it, then it will install Docker in the newly created box to finally pull the Docker image to create our Spark environment.
 
-Running in the console ```vagrant up``` will do the trick. If it's the first time it will take a while since it needs to download everything from the remote repositories.
+Running in the console ```vagrant up --provision``` will do the trick. If it's the first time it will take a while since it needs to download everything from the remote repositories.
 
 After the machine completed the installation of the needed components we can log into the spark-host with ```vagrant ssh```. To access the Docker container you can use first ```docker ps``` to find out container's id (first 3 characters will be suficient and then ```docker exec -it <CONTAINER-ID> bash``` to get us a bash interface with the loaded Spark environment (all inside the container).
 
@@ -35,15 +35,15 @@ If everything went smoot we can move to something more interesting.
 
 ## Testing Spark with a CSV dataset
 
-In the hadoop-2.6.0-base image we added to the docker filesystem a set of CSV files that contains the historical information of the MLB player's statistics from 1930's to 2013. It is not a big dataset (worth it to use this platform), but indeed it will help as an example for this tutorial. Since our Spark image is built based on the Hadoop image the files are available in the filesystem too.
+In the hadoop-2.6.0-base image we added to the Docker container's filesystem a set of CSV files that contains the historical information of the MLB player's statistics from 1930's to 2013. It is not a big dataset (that worth for use this platform), but indeed it will help as an example for this tutorial. Since our Spark image is built based on the Hadoop image the files are available in the filesystem for free.
 
 Okay, lets copy the information of Pitcher's statistics to the hdfs local node.
 ```
 root@037c6175146c:/# hdfs dfs -mkdir /tests
 root@037c6175146c:/# hdfs dfs -put /test-data/Pitching.csv /tests/   
 ```
-Now we have available the information inside the hadoop ecosystem, so lets fire up the Spark console to start crunching it.
 
+Now we have available the information inside the hadoop ecosystem, so lets fire up the Spark console to start crunching it.
 ```
 spark-shell --master yarn-client --driver-memory 1g --executor-memory 1g --executor-cores 1
 ```
@@ -56,7 +56,6 @@ pitchs: org.apache.spark.rdd.RDD[String] = hdfs:///tests MappedRDD[1] at textFil
 with this we will be able to operate in the dataset, for example sample the information in it. We'll try to find out the information's schema since this is a CSV file.
 
 If we run the next command in the recently created RDD:
-
 ```
 scala> pitchs.first
 res0: String = playerID,yearID,stint,teamID,lgID,W,L,G,GS,CG,SHO,SV,IPouts,H,ER,HR,BB,SO,BAOpp,ERA,IBB,WP,HBP,BK,BFP,GF,R,SH,SF,GIDP
@@ -80,7 +79,6 @@ scala> pitchs.map(_.split(",")).map(l => (l(0),1)).reduceByKey(_+_).sortBy(_._2,
 Lets recap the last sentence, first we take all the file lines and splited them forming a list of arrays (basically each data in the file like a matrix), next we map every array in the list taking just the first element (the name of the player) and put a 1 counting its appearance in a season, then we reduce the pair list using the key (in this case the name) summing each appearance, to then order it by the appearance (second element in the pair) to finally take the top ten and print them. Sweet.
 
 Some can say "hey! what happens if a player gets traded in mid-season?", clever, if a player gets traded then he must have two entries with different teams in the same year. So lets group the by year and then do the same calculation again. 
-
 ```
 scala> pitchs.map(_.split(",")).groupBy(_(1)).flatMap(l=>l._2).map(l=>(l(0),1)).reduceByKey(_+_).sortBy(_._2,false).take(10).foreach(println)
 (newsobo01,29)
@@ -94,7 +92,6 @@ scala> pitchs.map(_.split(",")).groupBy(_(1)).flatMap(l=>l._2).map(l=>(l(0),1)).
 (weathda01,26)
 (mulhote01,26)
 ```
-
 With some trickery we grouped by year and then flatten the results (since after grouping we got a list of pairs, with the second element being our player's annual stats), to finally calculate the result. Luckily the results are the same, but good catch.
 
 Next, how many games saved Mariano Rivera in its career? 
