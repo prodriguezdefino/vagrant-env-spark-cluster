@@ -64,7 +64,14 @@ we see the information of the schema of the csv file. In our examples we'll focu
 
 Next up, lets find out which pitchers played more seasons, like a top 10 or so. Since each line is a season for each player in a team we can do:
 ```
-scala> pitchs.map(_.split(",")).map(l => (l(0),1)).reduceByKey(_+_).sortBy(_._2,false).take(10).foreach(println)
+scala> pitchs.map(
+      	_.split(",")
+      ).map( l =>
+      	(l(0),1)
+      ).reduceByKey(_+_).sortBy(
+      	_._2,false
+      ).take(10).foreach(println) 
+
 (newsobo01,29)
 (kaatji01,28)
 (johnto01,28)
@@ -80,7 +87,13 @@ Lets recap the last sentence, first we take all the file lines and splited them 
 
 Some can say "hey! what happens if a player gets traded in mid-season?", clever, if a player gets traded then he must have two entries with different teams in the same year. So lets group the by year and then do the same calculation again. 
 ```
-scala> pitchs.map(_.split(",")).groupBy(_(1)).flatMap(l=>l._2).map(l=>(l(0),1)).reduceByKey(_+_).sortBy(_._2,false).take(10).foreach(println)
+scala> pitchs.map(
+		_.split(",")
+	).groupBy(_(1)).flatMap(l=>l._2).map(
+		l=>(l(0),1)
+	).reduceByKey(_+_).sortBy(
+		_._2,false
+	).take(10).foreach(println)
 (newsobo01,29)
 (kaatji01,28)
 (johnto01,28)
@@ -96,20 +109,34 @@ With some trickery we grouped by year and then flatten the results (since after 
 
 Next, how many games saved Mariano Rivera in its career? 
 ```
-scala> pitchs.map(_.split(",")).filter(_(0).startsWith("riverma")).map(l=>(l(0),Integer.valueOf(l(11)))).reduceByKey(_+_).collect().foreach(println)
+scala> pitchs.map(_.split(",")).filter(
+		_(0).startsWith("riverma")
+	).map(
+		l=>(l(0),Integer.valueOf(l(11)))
+	).reduceByKey(_+_).collect().foreach(println)
 (riverma01,652)
 ```
 
 And how many wins Greg Maddux earn in 1993 season?
 ```
-scala> pitchs.map(_.split(",")).filter(p=>p(0).startsWith("maddugr") && p(1).equals("1993")).map(l=>(l(0),Integer.valueOf(l(5)))).reduceByKey(_+_).collect().foreach(println)
+scala> pitchs.map(_.split(",")).filter(
+		p=>p(0).startsWith("maddugr") && p(1).equals("1993")
+	).map(
+		l=>(l(0),Integer.valueOf(l(5)))
+	).reduceByKey(_+_).collect().foreach(println)
 (maddugr01,20)
 ```
 
 Finally, what's the career ERA for Pedro Martinez while playing for Boston?
 ```
-scala> pitchs.map(_.split(",")).filter(p=>p(0).startsWith("martipe") && p(3).equals("BOS")).map(l=>(l(0),Integer.valueOf(l(5)))).max()
-res60: (String, Integer) = (martipe02,23)
+scala>val data = pitchs.map(_.split(",")).filter(
+		p=>p(0).startsWith("martipe") && p(3).equals("BOS")
+	).map(
+		l=>(l(0),1,l(19).toDouble)
+	).reduce((l,p)=>(l._1,l._2+p._2,l._3+p._3))
+data: (String, Int, Double) = (martipe02,7,17.47)
+scala> data._3/data._2
+res10: Double = 2.4957142857142856
 ```
 
 Hope this examples help, thanks =P
