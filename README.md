@@ -51,6 +51,10 @@ To avoid that this environment uses SkyDock image to listen Docker events (image
 
 So, we start up a master with an specific name and hostname (carefully picked so when SkyDock register the event will use the same one) and let every other running container run with that hostname in order to be able to connect. Since every node in the topology needs to talk to each other, it is really difficult to boot all needed images in order to achieve that, that's why the DNS appears as an appealing (and very simple) service discovery solution. 
 
+## Monitoring
+
+Since we open an mapped some ports for the VM and also for the containers, we are able to view progress of the spark jobs in the shell web console at http://localhost:4040 (note that the shell container must be up and with a spark console running). Also we can access to the Spark master node console in http://localhost:8080 and as a cherry on top the Hadoop namenode info page in http://localhost:50070. 
+
 ## Disclaimer
 
 Since the download time of all the needed images can take several minutes, it's recommended to boot up vagrant using a clabe connection, maybe at night (stop any torrents) or with a big bowl of coffe at hand. 
