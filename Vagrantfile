@@ -4,9 +4,9 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.vm.provider :virtualbox do |vb|
     vb.memory = 5120
     vb.cpus = 4
-    vb.name = "env-host.dev"
+    vb.name = "cluster-env-host.dev"
   end
-  config.vm.hostname = "env-host.dev"
+  config.vm.hostname = "cluster-env-host.dev"
   config.vm.box = "ubuntu/trusty64"
 
   # hadoop base ports in master
@@ -40,46 +40,45 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     echo "**********************"
     echo " "
     
+    echo "cleaning up..."
+    echo "**************"
+    docker rm $(docker ps -qa)
+    echo " "
+    
     # first find the docker0 interface assigned IP
     DOCKER0_IP=$(ip -o -4 addr list docker0 | perl -n -e 'if (m{inet\s([\d\.]+)\/\d+\s}xms) { print $1 }')
-    echo "docker0 interface in $DOCKER0_IP"
-    echo " "
     
     echo "Starting dns regristry..."
     echo "*************************"
-    echo " "
-    echo " will serve IPs for the .docker domain"
-    echo " "
     # then launch a skydns container to register our network addresses
     docker run -d -p $DOCKER0_IP:53:53/udp --name skydns crosbymichael/skydns -nameserver 8.8.8.8:53 -domain docker
+    echo " "
     
     # inspect the container to extract the IP of our DNS server
     DNS_IP=$(docker inspect --format '{{ .NetworkSettings.IPAddress }}' skydns)
     
     echo "Starting docker event listener..."
     echo "*********************************"
-    echo " "
-    echo " will register events in the 'dev' part of the domain"
-    echo " "
     # launch skydock as our listener of container events in order to register/deregister all the names on skydns
     docker run -d -v /var/run/docker.sock:/docker.sock --name skydock crosbymichael/skydock -ttl 30 -environment dev -s /docker.sock -domain docker -name skydns
-
+    echo " "
+    
     echo "Starting master node master.sparkmaster.dev.docker ..."
     echo "******************************************************"
-    echo " "
     # launch our master node (hadoop master stuff and also spark master server)
     docker run -itd --name=master -h master.sparkmaster.dev.docker -p 8080:8080 -p 50070:50070 --dns=$DNS_IP prodriguezdefino/sparkmaster:1.2.0
-
+    echo " "
+    
     echo "Starting worker node slave1.sparkworker.dev.docker ..."
     echo "******************************************************"
-    echo " "
     # launch a slave node (with a worker and a datanode in it)
     docker run -itd --name=slave1 -h slave1.sparkworker.dev.docker --dns=$DNS_IP prodriguezdefino/sparkworker:1.2.0
-
+    echo " "
+    
     echo "Starting shell node shell.sparkshell.dev.docker ..."
     echo "******************************************************"
-    echo " "
     # finally spawn a container able to run the spark shell 
-    docker run -it --name=shell -h shell.sparkshell.dev.docker --dns=$DNS_IP -p 4040:4040 prodriguezdefino/sparkshell:1.2.0
+    docker run -itd --name=shell -h shell.sparkshell.dev.docker --dns=$DNS_IP -p 4040:4040 prodriguezdefino/sparkshell:1.2.0
+    echo " "
   SCRIPT
 end
