@@ -45,18 +45,18 @@ Since this is a dynamic environment each running container (old and new ones) ne
 
 ## How everything gets tied up
 
-Docker by itself is not able to "discover" what's inside its own network, he can connect to any container running inside docker deamon but just by knowing the IP, so it needs to be configured in advance to know "who" is on the network. Doing that is fair simple, use the ```--link``` flag at container spawn time will do the trick, but in a dynamic or complex topology that could be very cumbersome (and even not possible).
+Docker by itself is not able to "discover" what's inside its own network, one can connect to any container running inside docker deamon but just by knowing the IP, but that IP must be configured in advance for a container to know "who" is on the network. The link will add the name and IP in the ```/etc/hosts``` file (at least in Linux containers), so then the linked cointainer gets available by name through the network. Doing that is fairly simple, using the ```--link``` flag at container spawn time will do the trick, but in a dynamic or complex topology that could be very cumbersome (and even not possible).
 
-To avoid that this environment uses SkyDock image to listen Docker events (image creation/destruction and container creation/start/stop/destruction) in order to register them in the SkyDns container that runs alongside. For more information on this visit the project [page](https://github.com/crosbymichael/skydock).
+To avoid that, this environment uses SkyDock image to listen Docker events (image creation/destruction and container creation/start/stop/destruction) in order to register them in the SkyDns container (that runs alongside). For more information on this visit the project [page](https://github.com/crosbymichael/skydock).
 
-So, we start up a master with an specific name and hostname (carefully picked so when SkyDock register the event will use the same one) and let every other running container run with that hostname in order to be able to connect. Since every node in the topology needs to talk to each other, it is really difficult to boot all needed images in order to achieve that, that's why the DNS appears as an appealing (and very simple) service discovery solution. 
+So, we start up a master with an specific name and hostname (carefully picked so when SkyDock register the event will use the same one) and let every other new container startup knowing that hostname in order to be able to connect. Since every node in the topology needs to talk to each other, it would be really difficult to boot all needed images in order to achieve that connectivity, that's why the DNS appears as an appealing (lightweight and very simple) service discovery solution. 
 
 ## Monitoring
 
-Since we open an mapped some ports for the VM and also for the containers, we are able to view progress of the spark jobs in the shell web console at http://localhost:4040 (note that the shell container must be up and with a spark console running). Also we can access to the Spark master node console in http://localhost:8080 and as a cherry on top the Hadoop namenode info page in http://localhost:50070. 
+Since we open an mapped some ports for the VM and also for the containers, we are able to view progress of the spark jobs in the shell web console at http://localhost:4040 (note that the shell container must be up and with a spark console running). Also we can access to the Spark master node console in http://localhost:8080 and, as a cherry on top, the Hadoop namenode info page in http://localhost:50070. 
 
 ## Disclaimer
 
-Since the download time of all the needed images can take several minutes, it's recommended to boot up vagrant using a clabe connection, maybe at night (stop any torrents) or with a big bowl of coffe at hand. 
+Since the download time of all the needed images can take several minutes, it's recommended to boot up vagrant using a cabled connection, maybe at night (stop any torrents) or with a big bowl of coffe at hand. 
 
-Other possibility is to build the images inside a vanilla Vagrant image (the provided one can be modified for that purpose), one by one, to load them in the next order: skydns, skydock, master, worker, shell. 
+Other possibility is to build the images inside a vanilla Vagrant image (the provided one can be modified for that purpose), one by one, to finally make each of them run. 
