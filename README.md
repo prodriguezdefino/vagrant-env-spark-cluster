@@ -45,7 +45,7 @@ Since this is a dynamic environment each running container (old and new ones) ne
 
 ## How everything gets tied up
 
-Docker by itself is not able to "discover" what's inside its own network, one can connect to any container running inside docker deamon but just by knowing the IP, but that IP must be configured in advance for a container to know "who" is on the network. The link will add the name and IP in the ```/etc/hosts``` file (at least in Linux containers), so then the linked cointainer gets available by name through the network. Doing that is fairly simple, using the ```--link``` flag at container spawn time will do the trick, but in a dynamic or complex topology that could be very cumbersome (and even not possible).
+Docker by itself is not able to "discover" what's inside its own network, one can connect to any container running inside docker deamon but just by knowing the IP, but that IP must be configured in advance for a container to know "who" is on the network. The link will add the name and IP in the ```/etc/hosts``` file (at least in Linux containers), so then the linked cointainer gets available by name through the network. Doing that is fairly simple, using the ```--link``` flag at container spawn time will do the trick, but in a dynamic or complex topology that could be very cumbersome (and even not possible in some cases).
 
 To avoid that, this environment uses SkyDock image to listen Docker events (image creation/destruction and container creation/start/stop/destruction) in order to register them in the SkyDns container (that runs alongside). For more information on this visit the project [page](https://github.com/crosbymichael/skydock).
 
