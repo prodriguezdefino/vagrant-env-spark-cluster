@@ -76,7 +76,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     echo " "
     
     echo "Starting shell node shell.sparkshell.dev.docker ..."
-    echo "******************************************************"
+    echo "****************************************************"
     # finally spawn a container able to run the spark shell 
     docker run -itd --name=shell -h shell.sparkshell.dev.docker --dns=$DNS_IP -p 4040:4040 prodriguezdefino/sparkshell:1.2.0
     echo " "
