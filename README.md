@@ -19,11 +19,11 @@ Vagrant can be found in this [url](https://www.vagrantup.com/downloads.html) or 
 
 In the root directory there is a Vagrantfile which contains the information needed by Vagrant to startup the virtual machine with the desired configuration. Our example will pull an Ubuntu image, will install it, then it will install Docker in the newly created box, then will pull the Docker images and finally will run some scripts to configure our Spark environment.
 
-Running in the console ```vagrant up --provision``` will do the trick. If it's the first time it will take a while (several minutes!, depending on the network available bandwidth) since it needs to download everything from the remote repositories.
+Running in the console ```vagrant up --provision``` will do the trick. If it's the first time it will take a while (several minutes!, depending on the network's available bandwidth) since it needs to download everything from the remote repositories.
 
-After the machine completed the installation of the needed components we can log into the spark-host with ```vagrant ssh```. To access the Docker container you can use first ```docker ps``` to find out the shell container's id (first 3 characters will be sufficient) and then ```docker exec -it <CONTAINER-ID> bash``` to get us a bash interface with the spark shell environment ready to be launched.
+After the machine completed the installation of the needed components we can log into the host machine with ```vagrant ssh```. To access the Docker container that will host our Spark Shell you can use first ```docker ps``` to find out the shell container's id (first 3 characters will be sufficient) and then ```docker exec -it <CONTAINER-ID> bash``` to get us a bash interface with the spark shell environment ready to be launched.
 
-Then, once in the container bash, we can load up the master's spark console with ```$RUN_SPARK_SHELL master.sparkmaster.dev.docker``` (since by default that's the address on where the master node register itself) and start testing the environment with:
+Then, once in the container's bash, we can load up the spark console with ```$RUN_SPARK_SHELL master.sparkmaster.dev.docker``` (since by default that's the address on where the master node register itself) and start testing the environment with:
 ```
 	val NUM_SAMPLES = 10000000
 	val count = sc.parallelize(1 to NUM_SAMPLES).map{i =>
@@ -35,7 +35,7 @@ Then, once in the container bash, we can load up the master's spark console with
 ```
 this will calculate an approximation of Pi (the old "throwing darts calculus" example), to improve the result increase NUM_SAMPLES variable.
 
-If everything went smoot we are good to go. We can continue testing the environment with the CSV stuff in the [standalone environment project](https://github.com/prodriguezdefino/vagrant-env-spark-standalone).
+If everything went okay we are good to go. We can continue testing the environment with the CSV stuff as seen in the [standalone environment project](https://github.com/prodriguezdefino/vagrant-env-spark-standalone).
 
 ## Launching multiple workers
 
@@ -45,7 +45,7 @@ Since this is a dynamic environment each running container (old and new ones) ne
 
 ## How everything gets tied up
 
-Docker by itself is not able to "discover" what's inside its own network, one can connect to any container running inside docker deamon but just by knowing the IP, but that IP must be configured in advance for a container to know "who" is on the network. The link will add the name and IP in the ```/etc/hosts``` file (at least in Linux containers), so then the linked cointainer gets available by name through the network. Doing that is fairly simple, using the ```--link``` flag at container spawn time will do the trick, but in a dynamic or complex topology that could be very cumbersome (and even not possible in some cases).
+Docker by itself is not able to "discover" what's inside its own network, one can connect to any container running inside docker's deamon but just by knowing the IP, the issue is that this IP must be configured in advance for a container to know "who" is on the network. The link flag will add the name and IP in the ```/etc/hosts``` file (at least in Linux containers), so then the linked cointainer gets available by name through the network. Doing that is fairly simple, using the ```--link``` flag at container spawn time will do the trick, but in a dynamic or complex topology that could be very cumbersome (and even not possible in some cases).
 
 To avoid that, this environment uses SkyDock image to listen Docker events (image creation/destruction and container creation/start/stop/destruction) in order to register them in the SkyDns container (that runs alongside). For more information on this visit the project [page](https://github.com/crosbymichael/skydock).
 
