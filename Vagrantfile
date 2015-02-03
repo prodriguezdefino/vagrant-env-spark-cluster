@@ -40,6 +40,12 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     echo "**********************"
     echo " "
     
+    # set a nameserver to forward anything outside .docker domain 
+    fwd_dns="8.8.8.8"
+    # set web proxy servers if needed
+    http_proxy=""
+    https_proxy=""
+
     echo "cleaning up..."
     echo "**************"
     docker rm $(docker ps -qa)
@@ -51,7 +57,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     echo "Starting dns regristry..."
     echo "*************************"
     # then launch a skydns container to register our network addresses
-    docker run -d -p $DOCKER0_IP:53:53/udp --name skydns crosbymichael/skydns -nameserver 8.8.8.8:53 -domain docker
+    docker run -d -p $DOCKER0_IP:53:53/udp --name skydns crosbymichael/skydns -nameserver $fwd_dns:53 -domain docker
     echo " "
     
     # inspect the container to extract the IP of our DNS server
@@ -66,19 +72,19 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     echo "Starting master node master.sparkmaster.dev.docker ..."
     echo "******************************************************"
     # launch our master node (hadoop master stuff and also spark master server)
-    docker run -itd --name=master -h master.sparkmaster.dev.docker -p 8080:8080 -p 50070:50070 --dns=$DNS_IP prodriguezdefino/sparkmaster:1.2.0
+    docker run -itd --name=master -h master.sparkmaster.dev.docker -p 8080:8080 -p 50070:50070 --dns=$DNS_IP -e "http_proxy=$http_proxy" -e "https_proxy=$https_proxy" prodriguezdefino/sparkmaster:1.2.0
     echo " "
     
     echo "Starting worker node slave1.sparkworker.dev.docker ..."
     echo "******************************************************"
     # launch a slave node (with a worker and a datanode in it)
-    docker run -itd --name=slave1 -h slave1.sparkworker.dev.docker --dns=$DNS_IP prodriguezdefino/sparkworker:1.2.0
+    docker run -itd --name=slave1 -h slave1.sparkworker.dev.docker --dns=$DNS_IP -e "http_proxy=$http_proxy" -e "https_proxy=$https_proxy" prodriguezdefino/sparkworker:1.2.0
     echo " "
     
     echo "Starting shell node shell.sparkshell.dev.docker ..."
     echo "****************************************************"
     # finally spawn a container able to run the spark shell 
-    docker run -itd --name=shell -h shell.sparkshell.dev.docker --dns=$DNS_IP -p 4040:4040 prodriguezdefino/sparkshell:1.2.0
+    docker run -itd --name=shell -h shell.sparkshell.dev.docker --dns=$DNS_IP -p 4040:4040 -e "http_proxy=$http_proxy" -e "https_proxy=$https_proxy" prodriguezdefino/sparkshell:1.2.0
     echo " "
   SCRIPT
 end
