@@ -51,6 +51,20 @@ To avoid that, this environment uses SkyDock image to listen Docker events (imag
 
 So, we start up a master with an specific name and hostname (carefully picked so when SkyDock register the event will use the same one) and let every other new container startup knowing that hostname in order to be able to connect. Since every node in the topology needs to talk to each other, it would be really difficult to boot all needed images in order to achieve that connectivity, that's why the DNS appears as an appealing (lightweight and very simple) service discovery solution. 
 
+## Networking inside an corporate environment (proxy servers)
+
+The images as they are won't work inside a proxy'ed environment unless they get proper configuration when running them, there are two things to consider: first the skydns should be able to access a nameserver (anyone will do the job) so if there is a nameserver configured on your network use that (cat /etc/resolv.conf in OSX for example will reveal the needed information), and secondly each container that need access to the internet should be ran using the ```-e "prop_key=prop_value"``` flag in order to configure environment variables (and with that set the ```http_proxy``` and ```https_proxy``` variables).
+
+A modification of the Vagrant provision script can be made using then:
+```
+...
+docker run -d -p $DOCKER0_IP:53:53/udp --name skydns crosbymichael/skydns -nameserver <corporate_nameserver_ip>:53 -domain docker
+...
+docker run -itd --name=master -h master.sparkmaster.dev.docker -p 8080:8080 -p 50070:50070 -e "http_proxy=<corporate_proxy_server:port>" -e "https_proxy=<corporate_proxy_server:port>" --dns=$DNS_IP prodriguezdefino/sparkmaster:1.2.0
+...
+```
+Note that the nameserver values and specific proxy config names/ports should be corrected in each case.
+
 ## Monitoring
 
 Since we open an mapped some ports for the VM and also for the containers, we are able to view progress of the spark jobs in the shell web console at http://localhost:4040 (note that the shell container must be up and with a spark console running). Also we can access to the Spark master node console in http://localhost:8080 and, as a cherry on top, the Hadoop namenode info page in http://localhost:50070. 
