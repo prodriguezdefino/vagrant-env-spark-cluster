@@ -2,7 +2,7 @@ VAGRANTFILE_API_VERSION = "2"
 
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|  
   config.vm.provider :virtualbox do |vb|
-    vb.memory = 5120
+    vb.memory = 8192
     vb.cpus = 4
     vb.name = "cluster-env-host.dev"
   end
@@ -31,21 +31,39 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.vm.provision "docker"
   # spark driver node
   config.vm.network "forwarded_port", guest: 4040, host: 4040
+  # docker remote api port
+  config.vm.network "forwarded_port", guest: 4444, host: 4444
+
+  config.vm.provision :shell, inline: <<-SCRIPT
+    echo "Setting env variables..."
+    echo "************************"
+    echo " "
+
+    # set a nameserver to forward anything outside .docker domain 
+    sh -c 'echo "export fwd_dns="8.8.8.8"" >> .bashrc' 
+    # set web proxy servers if needed
+    sh -c 'echo "export http_proxy=""" >> .bashrc' 
+    sh -c 'echo "export https_proxy=""" >> .bashrc' 
+  SCRIPT
 
   config.vm.provision "docker",
     images: ["crosbymichael/skydns","crosbymichael/skydock","prodriguezdefino/sparkmaster:1.2.0","prodriguezdefino/sparkworker:1.2.0","prodriguezdefino/sparkshell:1.2.0"]
 
   config.vm.provision :shell, inline: <<-SCRIPT
+    env
+    echo "Provisioning Docker..."
+    echo "**********************"
+    echo " "
+
+    sudo sh -c 'echo "DOCKER_OPTS=\\"-H tcp://0.0.0.0:4444 -H unix:///var/run/docker.sock\\"" >> /etc/default/docker'
+    sudo restart docker
+    sleep 2 
+    echo " "
+
     echo "Starting containers..."
     echo "**********************"
     echo " "
     
-    # set a nameserver to forward anything outside .docker domain 
-    fwd_dns="8.8.8.8"
-    # set web proxy servers if needed
-    http_proxy=""
-    https_proxy=""
-
     echo "cleaning up..."
     echo "**************"
     docker rm $(docker ps -qa)
