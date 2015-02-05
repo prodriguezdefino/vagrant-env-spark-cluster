@@ -69,6 +69,8 @@ Note that the nameserver values and specific proxy config names/ports should be 
 
 Since we open an mapped some ports for the VM and also for the containers, we are able to view progress of the spark jobs in the shell web console at http://localhost:4040 (note that the shell container must be up and with a spark console running). Also we can access to the Spark master node console in http://localhost:8080 and, as a cherry on top, the Hadoop namenode info page in http://localhost:50070. 
 
+Also, is possible to access to the Remote Docker API at http://localhost:4444, note that this should never be exposed to a public faced endpoint (because the obvious security implications), but in this case it is good to have it handy. 
+
 ## Disclaimer
 
 Since the download time of all the needed images can take several minutes, it's recommended to boot up vagrant using a cabled connection, maybe at night (stop any torrents) or with a big bowl of coffe at hand. 
