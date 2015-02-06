@@ -73,6 +73,6 @@ Also, is possible to access to the [Remote Docker API](https://docs.docker.com/r
 
 ## Disclaimer
 
-Since the download time of all the needed images can take several minutes, it's recommended to boot up vagrant using a cabled connection, maybe at night (stop any torrents) or with a big bowl of coffe at hand. 
+Since the download time of all the needed images can take several minutes, it's recommended to boot up vagrant using a cabled connection, maybe at night (stop any torrents) or with a big bowl of coffee at hand. 
 
 Other possibility is to build the images inside a vanilla Vagrant image (the provided one can be modified for that purpose), one by one, to finally make each of them run. 
