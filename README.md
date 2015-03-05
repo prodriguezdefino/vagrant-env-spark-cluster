@@ -35,7 +35,7 @@ Then, once in the container's bash, we can load up the spark console with ```$RU
 ```
 this will calculate an approximation of Pi (the old "throwing darts calculus" example), to improve the result increase NUM_SAMPLES variable.
 
-If everything went okay we are good to go. We can continue testing the environment with the CSV stuff as seen in the [standalone environment project](https://github.com/prodriguezdefino/vagrant-env-spark-standalone).
+If everything went okay we are good to go. We can continue testing the environment with the CSV stuff as seen in the [standalone environment project](https://github.com/prodriguezdefino/vagrant-env-spark-standalone#testing-spark-with-a-csv-dataset).
 
 ## Launching multiple workers
 
