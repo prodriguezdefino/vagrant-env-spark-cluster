@@ -28,9 +28,8 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.vm.network "forwarded_port", guest: 8080, host: 8080
   # spark worker node 
   config.vm.network "forwarded_port", guest: 8888, host: 8888
-  config.vm.provision "docker"
-  # spark driver node
   config.vm.network "forwarded_port", guest: 4040, host: 4040
+  config.vm.provision "docker"
   # docker remote api port
   config.vm.network "forwarded_port", guest: 4444, host: 4444
 
@@ -47,10 +46,9 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   SCRIPT
 
   config.vm.provision "docker",
-    images: ["crosbymichael/skydns","crosbymichael/skydock","prodriguezdefino/sparkmaster:1.2.0","prodriguezdefino/sparkworker:1.2.0","prodriguezdefino/sparkshell:1.2.0"]
+    images: ["crosbymichael/skydns","crosbymichael/skydock","prodriguezdefino/sparkmaster","prodriguezdefino/sparkworker"]
 
   config.vm.provision :shell, inline: <<-SCRIPT
-    env
     echo "Provisioning Docker..."
     echo "**********************"
     echo " "
@@ -70,7 +68,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     echo " "
     
     # first find the docker0 interface assigned IP
-    DOCKER0_IP=$(ip -o -4 addr list docker0 | perl -n -e 'if (m{inet\s([\d\.]+)\/\d+\s}xms) { print $1 }')
+    DOCKER0_IP=$(ip -o -4 addr list docker0 | awk '{split($4,a,"/"); print a[1]}')
     
     echo "Starting dns regristry..."
     echo "*************************"
@@ -90,19 +88,14 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     echo "Starting master node master.sparkmaster.dev.docker ..."
     echo "******************************************************"
     # launch our master node (hadoop master stuff and also spark master server)
-    docker run -itd --name=master -h master.sparkmaster.dev.docker -p 8080:8080 -p 50070:50070 --dns=$DNS_IP -e "http_proxy=$http_proxy" -e "https_proxy=$https_proxy" prodriguezdefino/sparkmaster:1.2.0
+    docker run -itd --name=master -h master.sparkmaster.dev.docker -p 8080:8080 -p 50070:50070 -p 8088:8088 --dns=$DNS_IP -e "http_proxy=$http_proxy" -e "https_proxy=$https_proxy" prodriguezdefino/sparkmaster
     echo " "
     
     echo "Starting worker node slave1.sparkworker.dev.docker ..."
     echo "******************************************************"
     # launch a slave node (with a worker and a datanode in it)
-    docker run -itd --name=slave1 -h slave1.sparkworker.dev.docker --dns=$DNS_IP -e "http_proxy=$http_proxy" -e "https_proxy=$https_proxy" prodriguezdefino/sparkworker:1.2.0
+    docker run -itd --name=slave1 -h slave1.sparkworker.dev.docker --dns=$DNS_IP -p 4040:4040 -e "http_proxy=$http_proxy" -e "https_proxy=$https_proxy" prodriguezdefino/sparkworker
     echo " "
     
-    echo "Starting shell node shell.sparkshell.dev.docker ..."
-    echo "****************************************************"
-    # finally spawn a container able to run the spark shell 
-    docker run -itd --name=shell -h shell.sparkshell.dev.docker --dns=$DNS_IP -p 4040:4040 -e "http_proxy=$http_proxy" -e "https_proxy=$https_proxy" prodriguezdefino/sparkshell:1.2.0
-    echo " "
   SCRIPT
 end
