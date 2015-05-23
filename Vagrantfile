@@ -2,8 +2,8 @@ VAGRANTFILE_API_VERSION = "2"
 
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|  
   config.vm.provider :virtualbox do |vb|
-    vb.memory = 8192
-    vb.cpus = 4
+    vb.memory = 5120
+    vb.cpus = 2
     vb.name = "cluster-env-host.dev"
   end
   config.vm.hostname = "cluster-env-host.dev"
@@ -53,18 +53,18 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     echo "**********************"
     echo " "
 
-    sudo sh -c 'echo "DOCKER_OPTS=\\"-H tcp://0.0.0.0:4444 -H unix:///var/run/docker.sock\\"" >> /etc/default/docker'
+    sudo sh -c 'echo "DOCKER_OPTS=\"-H tcp://0.0.0.0:4444 -H unix:///var/run/docker.sock\"" >> /etc/default/docker'
     sudo restart docker
-    sleep 2 
+    sleep 5
     echo " "
 
     echo "Starting containers..."
     echo "**********************"
     echo " "
-    
     echo "cleaning up..."
     echo "**************"
-    docker rm $(docker ps -qa)
+    sudo docker stop $(sudo docker ps -qa)
+    sudo docker rm $(sudo docker ps -qa)
     echo " "
     
     # first find the docker0 interface assigned IP
@@ -73,29 +73,29 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     echo "Starting dns regristry..."
     echo "*************************"
     # then launch a skydns container to register our network addresses
-    docker run -d -p $DOCKER0_IP:53:53/udp --name skydns crosbymichael/skydns -nameserver $fwd_dns:53 -domain docker
+    sudo docker run -d -p $DOCKER0_IP:53:53/udp --name skydns crosbymichael/skydns -nameserver $fwd_dns:53 -domain docker
     echo " "
     
     # inspect the container to extract the IP of our DNS server
-    DNS_IP=$(docker inspect --format '{{ .NetworkSettings.IPAddress }}' skydns)
+    DNS_IP=$(sudo docker inspect --format '{{ .NetworkSettings.IPAddress }}' skydns)
     
     echo "Starting docker event listener..."
     echo "*********************************"
     # launch skydock as our listener of container events in order to register/deregister all the names on skydns
-    docker run -d -v /var/run/docker.sock:/docker.sock --name skydock crosbymichael/skydock -ttl 30 -environment dev -s /docker.sock -domain docker -name skydns
+    sudo docker run -d -v /var/run/docker.sock:/docker.sock --name skydock crosbymichael/skydock -ttl 30 -environment dev -s /docker.sock -domain docker -name skydns
     echo " "
     
     echo "Starting master node master.sparkmaster.dev.docker ..."
     echo "******************************************************"
     # launch our master node (hadoop master stuff and also spark master server)
-    docker run -itd --name=master -h master.sparkmaster.dev.docker -p 8080:8080 -p 50070:50070 -p 8088:8088 --dns=$DNS_IP -e "http_proxy=$http_proxy" -e "https_proxy=$https_proxy" prodriguezdefino/sparkmaster
+    sudo docker run -itd --name=master -h master.sparkmaster.dev.docker -p 8080:8080 -p 50070:50070 -p 8088:8088 --dns=$DNS_IP -e "http_proxy=$http_proxy" -e "https_proxy=$https_proxy" prodriguezdefino/sparkmaster
     echo " "
-    
+    sleep 10
     echo "Starting worker node slave1.sparkworker.dev.docker ..."
     echo "******************************************************"
     # launch a slave node (with a worker and a datanode in it)
-    docker run -itd --name=slave1 -h slave1.sparkworker.dev.docker --dns=$DNS_IP -p 4040:4040 -e "http_proxy=$http_proxy" -e "https_proxy=$https_proxy" prodriguezdefino/sparkworker
+    sudo docker run -itd --name=slave1 -h slave1.sparkworker.dev.docker --dns=$DNS_IP -e "http_proxy=$http_proxy" -e "https_proxy=$https_proxy" prodriguezdefino/sparkworker
     echo " "
-    
+        
   SCRIPT
 end
