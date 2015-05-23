@@ -8,3 +8,5 @@
 .vagrant/machines/default/virtualbox/index_uuid
 
 .vagrant/machines/default/virtualbox/synced_folders
+
+.vagrant/machines/default/virtualbox/private_key
